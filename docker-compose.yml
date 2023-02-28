@@ -1,0 +1,28 @@
+version: '3.1'
+services:
+  app:
+    container_name: auth-challange
+    image: auth-challange
+    build: ./
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:14.0-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=Password@123
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=authentication_db
+  vault:
+    container_name: vault
+    image: vault
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./vault/:/vault/config
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_DEV_ROOT_TOKEN_ID: hvs.9k8zRXSBhrTPsCwF8iXov0kE
