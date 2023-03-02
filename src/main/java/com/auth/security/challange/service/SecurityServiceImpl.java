@@ -21,6 +21,9 @@ public class SecurityServiceImpl implements SecurityService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    CustomEmployeeDetailsService customEmployeeDetailsService;
+
     @Override
     public ResponseDto registerUser(RegistrationDto registrationDto) {
         if (employeeRepository.existsByEmail(registrationDto.getEmail())) {
@@ -44,16 +47,20 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     @TrackExecutionTime
     public ResponseDto userLogin(LoginDTO loginDTO) {
-        Employee existingUser= employeeRepository.findByEmail(loginDTO.email());
-        if(existingUser == null){
+        Employee existingUser = employeeRepository.findByEmail(loginDTO.email());
+        if (existingUser == null) {
             return new ErrorResponseDto(ApplicationConstants.HTTP_RESPONSE_ERROR_CODE,
                     ApplicationConstants.HTTP_RESPONSE_ERROR_CODE_NOT_FOUND_MSG);
+        } else if (!passwordEncoder.matches(loginDTO.password(), customEmployeeDetailsService.loadUserByUsername(loginDTO.email()).getPassword())) {
+            return new ErrorResponseDto(ApplicationConstants.HTTP_RESPONSE_ERROR_CODE,
+                    ApplicationConstants.PASSWORD_MISMATCH);
+        }else{
+            return new SuccessResponseDto(LoginResponseDto.builder()
+                    .email(existingUser.getEmail())
+                    .password(existingUser.getPassword())
+                    .username(existingUser.getUsername())
+                    .build());
         }
-        return new SuccessResponseDto(LoginResponseDto.builder()
-                .email(existingUser.getEmail())
-                .password(existingUser.getPassword())
-                .username(existingUser.getUsername())
-                .build());
     }
 
     @Override
